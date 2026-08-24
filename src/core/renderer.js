@@ -7,28 +7,11 @@ import { disposeScope, renderComponent } from "./components";
 export class Renderer {
 	/**
 	 * Initialize a Renderer instance
-	 * @param {string} mode - The mode in which to render, ie inline or full screen
-	 */
-	constructor(mode = "inline") {
-		constructorValidator({mode});
-
-		this.mode = mode;
-		this.canvas = new Canvas();
-		this.dirty = false;
-		this.stack = [];
-		this.keyListeners = [];
-
-		this._rendering = false;
-		this._pendingActions = [];
-	}
-
-	/**
-	 * Register a function to handle keypresses
-	 * @param {function} handlers - An object mapping keys to functions
-	 * @param {Scope} scope - The scope in which it applies
+	 * @param {Function} handlers 
+	 * @param scope - The scope in which it applies
 	 */
 	registerKeyHandler(handlers, scope) {
-		// TODO: Actually track keypresses
+		// TODO: Actually track keypresses - allow them to propagate on if needed
 		const entry = { handlers, scope };
 		this.keyListeners.push(entry)
 		scope.cleanups.push(() => {
@@ -47,7 +30,7 @@ export class Renderer {
 	/**
 	 * Create a new root element in the stack
 	 * @param {Function} fn - The component function
-	 * @param props - The props to pass to the component on render
+	 * @param {*} props - The props to pass to the component on render
 	 * @param {boolean} fullscreen - Whether the component is fullscreen
 	 * @returns The scope of the component
 	 */
@@ -73,7 +56,7 @@ export class Renderer {
 	/**
 	 * Replaces the topmost component with another
 	 * @param {Function} fn - The component function
-	 * @param props - The props to pass to the component on render
+	 * @param {*} props - The props to pass to the component on render
 	 * @param {boolean} fullscreen - Whether the component is fullscreen
 	 * @returns The scope of the component
 	 */
@@ -86,7 +69,7 @@ export class Renderer {
 	/**
 	 * Mount a component in fullscreen mode
 	 * @param {Function} fn - The component function
-	 * @param props - The props to pass to the component on render
+	 * @param {*} props - The props to pass to the component on render
 	 */
 	mount(fn, props = {}) {
 		this.push(fn, props, true);
