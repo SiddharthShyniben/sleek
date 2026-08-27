@@ -1,11 +1,24 @@
 import { proxy, subscribe } from 'valtio/vanilla';
-
-// TODO: document + add JSDoc type for scopet
+/** @import { Renderer } from "./renderer.js" */
 
 /**
- * Create a scope for a component instance 
- * @param renderer - The renderer instance this component is attached to
- * @param [parent=null] - The parent component
+ * Component state, tracking its reactive store, its position
+ * in the scope tree, and cleanup for when it's unmounted.
+ * @typedef {Object} Scope
+ * @property {Renderer} renderer - The renderer this component is attached to
+ * @property {?Scope} parent - The parent scope, or `null` for a root
+ * @property {Object} state - The component's reactive state
+ * @property {boolean} mounted - Whether the component has rendered at least once
+ * @property {Map<*, Scope>} children - Child scopes, keyed by the key passed to `child()`
+ * @property {Set<*>} visitedThisPass - Child keys visited during the current render pass
+ * @property {Function[]} cleanups - Functions to run when this scope is disposed
+ */
+
+/**
+ * Create a scope for a component instance.
+ * @param {Renderer} renderer - The renderer instance this component is attached to
+ * @param {?Scope} [parent=null] - The parent component's scope
+ * @return {Scope}
  */
 export function createScope(renderer, parent = null) {
 	return {
@@ -20,8 +33,8 @@ export function createScope(renderer, parent = null) {
 }
 
 /**
- * Dispose of a scope and run all it's cleanup functions
- * @param scope - The scope to dispose
+ * Dispose of a scope and run all its cleanup functions, recursively.
+ * @param {Scope} scope - The scope to dispose
  */
 export function disposeScope(scope) {
 	for (const fn of scope.cleanups) fn();
@@ -31,10 +44,11 @@ export function disposeScope(scope) {
 let currentScope = null;
 
 /**
- * Render a component
- * @param scope - The scope of the component
+ * Render a component within its scope.
+ * @param {Scope} scope - The scope of the component
  * @param {Function} fn - The component function
  * @param {*} props - The props to pass to the component
+ * @return {*} The component function's return value
  */
 export function renderComponent(scope, fn, props) {
 	const prevScope = currentScope;
@@ -63,10 +77,11 @@ export function renderComponent(scope, fn, props) {
 }
 
 /**
- * Create a child component
- * @param key - The unique key used to track children
+ * Render a child component.
+ * @param {*} key - The unique key used to track this child across renders
  * @param {Function} fn - The component function
  * @param {*} props - The props to pass to the component
+ * @return {*} The component function's return value
  */
 export function child(key, fn, props) {
 	const parentScope = currentScope;
@@ -81,9 +96,9 @@ export function child(key, fn, props) {
 }
 
 /**
- * Helper to add default values to store
- * @param {*} store - Store object 
- * @param {*} values - Default values
+ * Fill in default values on a store
+ * @param {Object} store - Store object
+ * @param {Object} values - Default values, keyed the same as `store`
  */
 export function defaults(store, values) {
 	for (const key in values) {
@@ -92,15 +107,16 @@ export function defaults(store, values) {
 }
 
 /**
- * Add a key handler to the current component
- * @param handlers - Handler functions
+ * Register a key handler on the current component's scope.
+ * @param {*} handlers - Handler functions
  */
 export function useKey(handlers) {
 	currentScope.renderer.registerKeyHandler(handlers, currentScope);
 }
 
 /**
- * On mount lifecycle hook
+ * On-mount lifecycle hook. If `effect` returns a function, it's
+ * registered as a cleanup to run when the scope is disposed.
  * @param {Function} effect - The callback function
  */
 export function onMount(effect) {
