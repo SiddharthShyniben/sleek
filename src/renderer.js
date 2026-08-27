@@ -1,7 +1,7 @@
 import validate from "@nuff-said/validate";
 import { nanoid } from "nanoid";
 import Canvas from "terminal-canvas";
-import { disposeScope, renderComponent } from "./components";
+import { disposeScope, renderComponent } from "./scope.js";
 
 /** Class that handles low level access to the screen */
 export class Renderer {
