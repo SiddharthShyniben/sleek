@@ -1,6 +1,39 @@
 import validate from "@nuff-said/validate";
 import { allNodeDefaultOpts, exactString, nodeOptionsSchema } from "../util/validate.js";
 
+/**
+ * Word-wrap options.
+ * @typedef {Object} WrapOptions
+ * @property {number} [width] - Maximum line width
+ * @property {number} [indent] - Number of spaces to indent each line with
+ * @property {string} [newline] - String used to separate lines
+ * @property {boolean} [trim] - Whether to trim trailing whitespace from each line
+ * @property {boolean} [cut] - Whether to break words longer than `width`
+ */
+
+/**
+ * A text node's options, along with
+ * {@link import('../util/validate.js').NodeOptions}
+ * @typedef {Object} TextOptions
+ * @property {boolean} [wrap=false] - Whether to word-wrap the text to fit its width
+ * @property {WrapOptions} [wrapOpts] - word-wrap options, used when `wrap` is true
+ */
+
+/**
+ * A leaf node that renders a run of text.
+ * @typedef {Object} TextNode
+ * @property {"text"} type
+ * @property {string} text - The text to render
+ * @property {TextOptions} options
+ */
+
+/**
+ * Create a text node.
+ * @param {string} text - The text to render
+ * @param {TextOptions} [options={}] - Layout and wrapping options
+ * @return {TextNode} The created (and validated) node
+ * @throws {Error} If `options` fails validation
+ */
 export function text(text, options = {}) {
 	const leaf = {
 		type: "text",
@@ -13,11 +46,20 @@ export function text(text, options = {}) {
 	return leaf;
 }
 
+/**
+ * Default {@link TextOptions} for a text node.
+ * @type {TextOptions}
+ */
 export const textDefaultOpts = {
 	wrap: false,
 	wrapOpts: {},
 }
 
+/**
+ * Validates a {@link TextNode}
+ * @param {TextNode} node
+ * @throws {Error}
+ */
 export const validateText = validate({
 	type: exactString("text"),
 	text: [validate.required(), validate.string()],
@@ -34,10 +76,23 @@ export const validateText = validate({
 	}
 })
 
+/**
+ * Measure a text node's size
+ * @param {TextNode} node
+ * @param {*} constraints - Available space to measure against
+ * @todo Implement
+ */
 export function measureText(node, constraints) {
 	throw new Error("Not implemented");
 }
 
+/**
+ * Paint a text node
+ * @param {TextNode} node
+ * @param {*} canvas - The canvas to paint into
+ * @param {*} rect - The rectangle measured for this node
+ * @todo Implement
+ */
 export function paintText(node, canvas, rect) {
 	throw new Error("Not implemented");
 }
