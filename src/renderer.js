@@ -16,9 +16,15 @@ import { oneOf } from "./util/validate.js";
 
 /** Class that handles low level access to the screen */
 export class Renderer {
-	constructor(options) {
-		constructorValidator(options);
-		this.options = options;
+	constructor(options = {}) {
+		const opts = { mode: "screen", ...options };
+		constructorValidator(opts);
+		this.options = opts;
+		this.stack = [];
+		this.keyListeners = [];
+		this._pendingActions = [];
+		this.dirty = false;
+		this._rendering = false;
 	}
 
 	/**
