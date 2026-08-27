@@ -1,14 +1,30 @@
 import validate from "@nuff-said/validate";
-import { nanoid } from "nanoid";
 import Canvas from "terminal-canvas";
-import { disposeScope, renderComponent } from "./scope.js";
+
+import { createScope, disposeScope, renderComponent } from "./scope.js";
+import { oneOf } from "./util/validate.js";
+/** @import { Scope } from "./scope.js" */
+
+/**
+ * One entry in the renderer's component stack.
+ * @typedef {Object} StackEntry
+ * @property {Scope} scope
+ * @property {Function} fn - The component function
+ * @property {*} props - The props passed to the component on render
+ * @property {boolean} fullscreen - Whether this entry replaces everything beneath it
+ */
 
 /** Class that handles low level access to the screen */
 export class Renderer {
+	constructor(options) {
+		constructorValidator(options);
+		this.options = options;
+	}
+
 	/**
-	 * Initialize a Renderer instance
-	 * @param {Function} handlers 
-	 * @param scope - The scope in which it applies
+	 * Register a key handler, scoped to a component.
+	 * @param {*} handlers - Handler functions
+	 * @param {Scope} scope - The scope the handler is registered against
 	 */
 	registerKeyHandler(handlers, scope) {
 		// TODO: Actually track keypresses - allow them to propagate on if needed
@@ -20,7 +36,7 @@ export class Renderer {
 		})
 	}
 
-	/** Schedule a render */
+	/** Schedule a render for the next microtask */
 	requestRender() {
 		if (this.dirty) return;
 		this.dirty = true;
@@ -28,11 +44,11 @@ export class Renderer {
 	}
 
 	/**
-	 * Create a new root element in the stack
+	 * Push a new root component onto the stack.
 	 * @param {Function} fn - The component function
-	 * @param {*} props - The props to pass to the component on render
-	 * @param {boolean} fullscreen - Whether the component is fullscreen
-	 * @returns The scope of the component
+	 * @param {*} [props={}] - The props to pass to the component on render
+	 * @param {boolean} [fullscreen=true] - Whether the component is fullscreen
+	 * @return {?Scope} The scope of the component (`undefined` if deferred until the current render pass finishes)
 	 */
 	push(fn, props = {}, fullscreen = true) {
 		if (this._rendering) {
@@ -46,7 +62,7 @@ export class Renderer {
 		return scope;
 	}
 
-	/** Remove the topmost component and dispose it's scope */
+	/** Remove the topmost component and dispose its scope */
 	pop() {
 		const entry = this.stack.pop();
 		if (entry) disposeScope(entry.scope)
@@ -54,11 +70,11 @@ export class Renderer {
 	}
 
 	/**
-	 * Replaces the topmost component with another
+	 * Replace the topmost component with another.
 	 * @param {Function} fn - The component function
-	 * @param {*} props - The props to pass to the component on render
-	 * @param {boolean} fullscreen - Whether the component is fullscreen
-	 * @returns The scope of the component
+	 * @param {*} [props={}] - The props to pass to the component on render
+	 * @param {boolean} [fullscreen=true] - Whether the component is fullscreen
+	 * @return {?Scope} The scope of the new component
 	 */
 	replace(fn, props = {}, fullscreen = true) {
 		const entry = this.stack.pop()
@@ -67,15 +83,17 @@ export class Renderer {
 	}
 
 	/**
-	 * Mount a component in fullscreen mode
+	 * Mount a component in fullscreen mode.
 	 * @param {Function} fn - The component function
-	 * @param {*} props - The props to pass to the component on render
+	 * @param {*} [props={}] - The props to pass to the component on render
 	 */
 	mount(fn, props = {}) {
 		this.push(fn, props, true);
 	}
 
-	/** Render the screen */
+	/**
+	 * Render and paint the stack.
+	 */
 	renderPass() {
 		this.dirty = false;
 
@@ -106,13 +124,20 @@ export class Renderer {
 		}
 	}
 
-	/** Actually paint the components on the screen */
+	/**
+	 * Paint the given trees onto the screen.
+	 * @param {*[]} trees - The rendered trees
+	 * @todo Implement
+	 */
 	paint(trees) {
-		// TODO: Implement
 		throw new Error("Not implemented");
 	}
 }
 
+/**
+ * Validator for `Renderer` constructor options.
+ * @private
+ */
 const constructorValidator = validate({
-	mode: [validate.string(), str => ["inline", "screen"].includes(str) || `${str} must be one of "inline" or "screen"`]
+	mode: [validate.string(), oneOf("screen", "inline")]
 })
