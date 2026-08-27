@@ -18,6 +18,7 @@
   "dependencies": {
     "@nuff-said/validate": "^1.0.1",
     "terminal-canvas": "^3.1.2",
-    "valtio": "^2.3.2"
+    "valtio": "^2.3.2",
+    "word-wrap": "^1.2.5"
   }
 }
