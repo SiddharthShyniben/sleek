@@ -56,10 +56,10 @@ export function renderComponent(scope, fn, props) {
 
 	scope.visitedThisPass = new Set();
 
-	const result = fn(props, scope.store);
+	const result = fn(props, scope.state);
 
 	if (!scope.mounted) {
-		subscribe(scope.store, () => {
+		subscribe(scope.state, () => {
 			scope.renderer.requestRender();
 		})
 		scope.mounted = true;
