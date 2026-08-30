@@ -1,5 +1,6 @@
 import validate from "@nuff-said/validate";
 import { allNodeDefaultOpts, exactString, isPositiveInt, nodeOptionsSchema, oneOf, positiveInt } from "../util/validate.js";
+import { registry } from "./registry.js";
 /** @import { TextNode } from "./text.js" */
 
 /**
@@ -107,10 +108,48 @@ export const validateBox = validate({
  * Measure a box node.
  * @param {BoxNode} node
  * @param {*} constraints - Available space to measure against
- * @todo Implement
  */
 export function measureBox(node, constraints) {
-	throw new Error("Not implemented");
+	const children = [];
+
+	let paddingX = 0, paddingY = 0;
+
+	if (node.options.padding) {
+		if (isNaN(node.options.padding)) {
+			paddingX = (node.options.padding.left ?? 0) + (node.options.padding.right ?? 0);
+			paddingY = (node.options.padding.top ?? 0) + (node.options.padding.bottom ?? 0);
+		} else {
+			paddingX = paddingY = 2 * node.options.padding;
+		}
+	}
+
+	const localConstraints = {...constraints};
+	localConstraints.maxWidth -= paddingX;
+	localConstraints.maxHeight -= paddingY;
+
+	for (const child of node.children) {
+		const rect = registry[child.type].measure(child, localConstraints);
+		children.push(rect)
+	}
+
+	let width = 0, height = 0;
+
+	if (node.options.direction === "row") {
+		width = children.map(child => child.width).reduce((a, b) => a + b, 0);
+		height = Math.max(...children.map(child => child.height))
+		width += node.options.gap * (children.length - 1)
+	} else {
+		height = children.map(child => child.height).reduce((a, b) => a + b, 0);
+		width = Math.max(...children.map(child => child.width))
+		height += node.options.gap * (children.length - 1)
+	}
+	
+	if (width < 0) width = 0;
+	if (height < 0) height = 0;
+	width += paddingX;
+	height += paddingY;
+
+	return { width, height, children }
 }
 
 /**
