@@ -82,7 +82,6 @@ export const validateText = validate({
  * Measure a text node's size
  * @param {TextNode} node
  * @param {*} constraints - Available space to measure against
- * @todo Implement
  */
 export function measureText(node, constraints) {
 	const wrapOpts = { width: constraints.maxWidth }
@@ -103,7 +102,6 @@ export function measureText(node, constraints) {
  * @param {TextNode} node
  * @param {*} canvas - The canvas to paint into
  * @param {*} rect - The rectangle measured for this node
- * @todo Implement
  */
 export function paintText(node, canvas, rect) {
 	const wrapOpts = { width: rect.width }
